@@ -112,9 +112,9 @@ def recoger_candidatas():
 PROMPT = """Eres un analista de tecnología, IA y ciberseguridad. Te paso una lista de noticias candidatas de las últimas 24 horas (JSON).
 
 Tareas:
-1. Elige las {n} más importantes e influyentes para un comercial del secto IT que quiere identificar noticias que puedan ayudarle a posicionar servicios de advisory tecnológico estratégico (AI, Ciberseguridad, EStrategia IT, vendors, etc.). Si varias hablan de lo mismo, quédate con una sola.
+1. Elige las {n} más importantes e influyentes para un comercial del sector IT que quiere identificar noticias que puedan ayudarle a posicionar servicios de advisory tecnológico estratégico (IA, ciberseguridad, estrategia IT, vendors, etc.). Si varias hablan de lo mismo, quédate con una sola.
 2. Ordénalas de MAYOR a MENOR importancia.
-3. Para cada una escribe, en español: un título breve, un resumen de 100 palbras y el impacto (1-2 frases: a quién afecta y por qué importa).
+3. Para cada una escribe, en español: un título breve, un resumen de unas 100 palabras y el impacto (1-2 frases: a quién afecta y por qué importa).
 
 No inventes datos que no aparezcan en el título o extracto. Responde SOLO con un array JSON con objetos de esta forma:
 {{"id": <id de la noticia>, "titulo": "...", "resumen": "...", "impacto": "..."}}
@@ -125,7 +125,9 @@ Noticias:
 
 
 def llamar_gemini(candidatas):
-    clave = os.environ["GEMINI_API_KEY"]
+    clave = os.environ.get("GEMINI_API_KEY")
+    if not clave:
+        raise RuntimeError("Falta GEMINI_API_KEY (secret no configurado o workflow sin la variable)")
     entrada = [
         {k: c[k] for k in ("id", "categoria", "fuente", "titulo", "extracto")}
         for c in candidatas
@@ -141,10 +143,12 @@ def llamar_gemini(candidatas):
         if r.status_code in (429, 500, 503):
             time.sleep(10 * (intento + 1))
             continue
-        r.raise_for_status()
+        if not r.ok:
+            raise RuntimeError(f"Gemini HTTP {r.status_code} (modelo {MODELO}): {r.text[:300]}")
         texto = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+        texto = re.sub(r"^```(?:json)?\s*|\s*```$", "", texto.strip())
         return json.loads(texto)
-    raise RuntimeError("Gemini no respondió tras varios intentos")
+    raise RuntimeError(f"Gemini sin respuesta tras reintentos (HTTP {r.status_code}): {r.text[:300]}")
 
 
 # ---------- Telegram ----------
@@ -214,6 +218,9 @@ def main():
             raise ValueError("Gemini no devolvió noticias válidas")
     except Exception as exc:
         print(f"[WARN] Gemini falló, envío sin resumen: {exc}")
+        enviar(token, chat_id,
+               "⚠️ Gemini ha fallado, envío solo títulos.\n"
+               f"<code>{html.escape(str(exc)[:500])}</code>")
         top = sorted(candidatas, key=lambda c: c["score"], reverse=True)[:NOTICIAS_FINALES]
         bloques = [bloque_sin_ia(i + 1, c) for i, c in enumerate(top)]
 
