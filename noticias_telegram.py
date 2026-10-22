@@ -6,7 +6,7 @@ Variables de entorno:
   TELEGRAM_TOKEN    token del bot (@BotFather)
   TELEGRAM_CHAT_ID  tu chat id
   GEMINI_API_KEY    clave gratuita de https://aistudio.google.com/apikey
-  GEMINI_MODEL      (opcional) modelo a usar, por defecto gemini-2.5-flash
+  GEMINI_MODEL      (opcional) modelo a usar, por defecto gemini-3.6-flash
 
 Dependencias: pip install feedparser requests
 """
@@ -23,7 +23,7 @@ import requests
 HORAS_VENTANA = 30          # solo noticias de las últimas N horas
 CANDIDATAS_POR_SECCION = 15  # las que se envían a Gemini para que elija
 NOTICIAS_FINALES = 10        # las que llegan a Telegram
-MODELO = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODELO = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 FEEDS = {
     "Tecnología": [
@@ -112,9 +112,9 @@ def recoger_candidatas():
 PROMPT = """Eres un analista de tecnología, IA y ciberseguridad. Te paso una lista de noticias candidatas de las últimas 24 horas (JSON).
 
 Tareas:
-1. Elige las {n} más importantes e influyentes para un profesional del sector tecnológico. Si varias hablan de lo mismo, quédate con una sola.
+1. Elige las {n} más importantes e influyentes para un comercial del secto IT que quiere identificar noticias que puedan ayudarle a posicionar servicios de advisory tecnológico estratégico (AI, Ciberseguridad, EStrategia IT, vendors, etc.). Si varias hablan de lo mismo, quédate con una sola.
 2. Ordénalas de MAYOR a MENOR importancia.
-3. Para cada una escribe, en español: un título breve, un resumen de 2-3 frases y el impacto (1-2 frases: a quién afecta y por qué importa).
+3. Para cada una escribe, en español: un título breve, un resumen de 100 palbras y el impacto (1-2 frases: a quién afecta y por qué importa).
 
 No inventes datos que no aparezcan en el título o extracto. Responde SOLO con un array JSON con objetos de esta forma:
 {{"id": <id de la noticia>, "titulo": "...", "resumen": "...", "impacto": "..."}}
