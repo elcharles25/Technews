@@ -27,7 +27,6 @@ MODELO = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 FEEDS = {
     "Tecnología": [
-        "https://www.xataka.com/feedburner.xml",
         "https://www.theverge.com/rss/index.xml",
         "https://feeds.arstechnica.com/arstechnica/index",
         "https://techcrunch.com/feed/",
@@ -36,7 +35,6 @@ FEEDS = {
         "https://www.technologyreview.com/feed/",
         "https://venturebeat.com/category/ai/feed/",
         "https://huggingface.co/blog/feed.xml",
-        "https://openai.com/news/rss.xml",
     ],
     "Ciberseguridad": [
         "https://feeds.feedburner.com/TheHackersNews",
